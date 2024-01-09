@@ -4,7 +4,7 @@ import {
   Message,
   TextMessage,
   MessageFactory,
-} from "../src/components/models";
+} from "@orbifold/entities";
 import InputHandler from "../src/components/inputHandler";
 describe("InputHandler", () => {
   it("should turn it all to messages", async () => {

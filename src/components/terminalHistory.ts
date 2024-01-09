@@ -1,4 +1,4 @@
-import { Message } from "./models";
+import { Message } from"@orbifold/entities";
 
 export default class TerminalHistory {
   private history: Message[] = [];

@@ -1,12 +1,17 @@
-import { Message, MessageFactory, TextMessage } from "./models";
 import TerminalController from "./terminalController";
-import type { TerminalIO, ExecutionFunction } from "./types";
+import type { TerminalIO, ExecutionFunction } from "@orbifold/entities";
 import _ from "lodash";
-import {Utils} from "@orbifold/utils";
+import { Utils } from "@orbifold/utils";
+import { Message, MessageFactory } from "@orbifold/entities";
 export default class InputHandler {
+  public redirect: { [key: string]: string } = {};
+  private _redirect = {
+    clear: "!clear",
+  };
   constructor() {}
   public handleInput(input: TerminalIO): Message[] {
-    
+    // pick up redirects
+    _.assign(this._redirect, this.redirect);
     if (_.isNil(input)) {
       return [];
     }
@@ -44,6 +49,13 @@ export default class InputHandler {
   handleString(input: string): Message[] {
     if (_.isEmpty(input)) {
       return [MessageFactory.fromString("")]; // necessary for newline
+    }
+    const keys = Object.keys(this._redirect);
+    const foundRedirect =
+      keys.find((k) => k.toLowerCase() === input.trim().toLowerCase()) || null;
+
+    if (foundRedirect) {
+      input = this._redirect[foundRedirect];
     }
     if (input.startsWith("!")) {
       return this.handleCommand(input);

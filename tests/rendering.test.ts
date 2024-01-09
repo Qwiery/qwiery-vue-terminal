@@ -2,7 +2,7 @@ import TerminalController, {
   TerminalChannels,
 } from "../src/components/terminalController";
 import { describe, test, it, expect } from "vitest";
-import { ErrorMessage, Message } from "../src/components/models";
+import { ErrorMessage, Message } from "@orbifold/entities";
 
 describe("TerminalController", () => {
   it("should r", async () => {

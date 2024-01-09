@@ -32,7 +32,13 @@
 <script setup lang="ts">
 import { defineProps, onMounted, ref } from "vue";
 import MessageRendering from "./messageRendering";
-import type { TerminalIO, ExecutionFunction, CommandFunction } from "./types";
+import type {
+  TerminalIO,
+  ExecutionFunction,
+  CommandFunction,
+} from "@orbifold/entities";
+import "../assets/style.css";
+
 import { Utils } from "@orbifold/utils";
 const props = defineProps<{
   /** The function to be executed when the Terminal gets input. */
@@ -41,12 +47,13 @@ const props = defineProps<{
   banner?: string;
   /** The commands that are available in the terminal. */
   commands?: { [key: string]: CommandFunction };
+  /** Define aliases. */
+  redirect?: { [key: string]: string };
 }>();
 
 import TerminalController from "./terminalController";
 import { TerminalChannels } from "./terminalController";
-import "../assets/style.css";
-import { CommandMessage, Message, TextMessage } from "./models";
+import { CommandMessage, Message, TextMessage } from "@orbifold/entities";
 const showBanner = ref(true);
 const banner = ref("");
 let controller: TerminalController | null = null;
@@ -73,6 +80,9 @@ function createController(): TerminalController {
   if (props.commands) {
     controller.commands = props.commands;
   }
+  if (props.redirect) {
+    controller.inputHandler.redirect = props.redirect;
+  }
   if (props.executor) {
     controller.executor = props.executor;
   } else {
@@ -83,18 +93,18 @@ function createController(): TerminalController {
     };
   }
   controller.on(TerminalChannels.Input, (obj: Message[]) => {
-    if(obj.length === 0) {
+    if (obj.length === 0) {
       return;
     }
-    if(obj.length>1){
+    if (obj.length > 1) {
       throw new Error("Only one input message is allowed.");
     }
     const m = obj[0];
-    if(m.typeName ==="TextMessage"){
+    if (m.typeName === "TextMessage") {
       input.value = m.text;
-    }else if(m.typeName ==="CommandMessage"){
+    } else if (m.typeName === "CommandMessage") {
       input.value = "!" + m.command + m.args.join(" ");
-    }else{
+    } else {
       throw new Error(`Unknown message type ${m.typeName}.`);
     }
     // scrollToBottom();
@@ -134,13 +144,6 @@ function formatInput(input: Message[]) {
       }
     })
     .join("<br/>");
-}
-
-function formatError(error: string | Error) {
-  if (error instanceof Error) {
-    return `<span class="error-output">${error.message}</span>`;
-  }
-  return `<span class="error-output">${error}</span>`;
 }
 
 onMounted(() => {

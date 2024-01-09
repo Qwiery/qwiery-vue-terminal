@@ -3,10 +3,20 @@ import _ from "lodash";
 import { Utils } from "@orbifold/utils";
 import TerminalHistory from "./terminalHistory";
 import InputHandler from "./inputHandler";
-import type { TerminalIO, ExecutionFunction } from "./types";
+import type {
+  TerminalIO,
+  ExecutionFunction,
+  CommandFunction,
+} from "@orbifold/entities";
+
 import MessageRendering from "./messageRendering";
 
-import { CommandMessage, ErrorMessage, TextMessage, Message } from "./models";
+import {
+  CommandMessage,
+  ErrorMessage,
+  TextMessage,
+  Message,
+} from "@orbifold/entities";
 export enum TerminalChannels {
   Input = "input",
   Output = "output",
@@ -18,16 +28,16 @@ export default class TerminalController extends EventEmitter {
   public inputHandler: InputHandler = new InputHandler();
   public commands: null | { [key: string]: CommandFunction } = {};
   public _commands: { [key: string]: CommandFunction } = {
-    clear: (input: string) => [CommandMessage.fromString("clear")],
+    clear: async (input: string) => [CommandMessage.fromString("clear")],
   };
   public static preamble = "$>";
   /**
    * The executor is a function that takes a command and returns something which gets transformed into a printable bunch.
-   * @type {((input: string) => Promise<any>) | null}
+   * @type {((input: Message) => Promise<any>) | null}
    */
   public executor:
     | null
-    | ((input: string) => Promise<string | string[] | null | Error | any>) =
+    | ((input: Message) => Promise<string | string[] | null | Error | any>) =
     null;
 
   private inputStack: string[][] = [];
@@ -67,8 +77,8 @@ export default class TerminalController extends EventEmitter {
           await this.handleError(<ErrorMessage>message);
           break;
         default:
-          const result = this.executor ? await this.executor(command) : null;
-          this.addInput(command);
+          const result = this.executor ? await this.executor(message) : null;
+          this.addInput(message);
           if (result) {
             this.handleExecutorResult(result);
           }
@@ -86,10 +96,11 @@ export default class TerminalController extends EventEmitter {
       null;
     if (actualKey) {
       this.addInput(command);
-      return this.raiseEvent(
-        this._commands[actualKey](command.args.join(" ")) || null
-      );
-    }else{
+      const result = await this._commands[actualKey](command.command);
+      if (result) {
+        return this.raiseEvent(<Message>result);
+      }
+    } else {
       this.addInput(command);
       return this.raiseEvent(
         ErrorMessage.fromString(`Command '${commandName}' not found.`)
@@ -160,6 +171,10 @@ export default class TerminalController extends EventEmitter {
     if (_.isNil(message)) {
       return;
     }
+    // should not happen but we are permissive
+    if(_.isArray(message)){
+      return (<Array<Message>><any>message).forEach(m => this.raiseEvent(m));
+    }
     switch (message.typeName) {
       case "CommandMessage":
         return this.CommandEvent([message]);
@@ -178,9 +193,7 @@ export default class TerminalController extends EventEmitter {
     }
   }
 
-  private sendInput(input: string | string[]) {
-    this.InputEvent([TextMessage.fromString(input.toString())]);
-  }
+ 
 
   private addInput(input: Message | null) {
     if (_.isNil(input)) {
@@ -189,7 +202,10 @@ export default class TerminalController extends EventEmitter {
 
     this.sendInputAsOutput(input);
     if (!Utils.isEmpty(input)) {
-      const m:Message = input instanceof Message ? input : TextMessage.fromString(input.toString());
+      const m: Message =
+        input instanceof Message
+          ? input
+          : TextMessage.fromString(input.toString());
       this.history.add(m);
     }
   }

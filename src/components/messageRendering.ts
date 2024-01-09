@@ -4,7 +4,7 @@ import {
   Message,
   TextMessage,
   WarningMessage,
-} from "./models";
+} from "@orbifold/entities";
 
 export default class MessageRendering {
   public static renderMessages(messages: Message[]): string {

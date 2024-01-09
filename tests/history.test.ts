@@ -1,6 +1,6 @@
 import { describe, test, it, expect } from "vitest";
 import TerminalHistory from "../src/components/terminalHistory";
-import { TextMessage } from "../src/components/models";
+import { TextMessage } from "@orbifold/entities";
 const m = (input: string) => {
   return TextMessage.fromString(input);
 };
