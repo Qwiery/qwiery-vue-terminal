@@ -1,0 +1,42 @@
+.terminal-wrapper {
+  background-color: black;
+  font-family: "Courier New", Courier, monospace;
+  color: white;
+  padding: 5px 10px; 
+  max-height: 300px;
+}
+.terminal-banner{
+    color:white;
+    font-weight: 600;
+    margin:5px 0;
+}
+.terminal-content{    
+    min-height: 200px;
+    overflow:scroll;
+    max-height: 250px;
+}
+.terminal-input{
+    display: flex;
+}
+.terminal-input input{
+    background-color: transparent;
+    border: none;
+    color: white;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 1rem;
+    width: 100%;
+    outline: none;
+}
+ 
+.terminal-render-text{
+    color: #d0deff;
+}
+.terminal-render-error{
+    color: #ff4107;
+}
+.terminal-render-warning{
+    color: #ff8b07;
+}
+.terminal-render-command{
+    color: #22ffd6;
+}
