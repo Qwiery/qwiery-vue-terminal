@@ -30,7 +30,7 @@ export default class TerminalController extends EventEmitter {
   public _commands: { [key: string]: CommandFunction } = {
     clear: async (input: string) => [CommandMessage.fromString("clear")],
   };
-  public static preamble = "$>";
+  public   prefix:string|((controller: TerminalController) => string) = "$ ";
   /**
    * The executor is a function that takes a command and returns something which gets transformed into a printable bunch.
    * @type {((input: Message) => Promise<any>) | null}
@@ -62,6 +62,7 @@ export default class TerminalController extends EventEmitter {
    * @return {Promise<void>}
    */
   public async execute(command: TerminalIO): Promise<void> {
+    // the handler will deal with potential redirects
     const messages = this.inputHandler.handleInput(command);
     if (messages.length === 0) {
       // no output and the input is reset
@@ -77,6 +78,16 @@ export default class TerminalController extends EventEmitter {
           await this.handleError(<ErrorMessage>message);
           break;
         default:
+          if (!this.executor) {
+            console.warn(`You need to provide an executor function to the terminal component.`)
+            return this.addInput(message);
+
+            // return this.raiseEvent(
+            //   TextMessage.fromString(
+            //     `You need to provide an executor function to the terminal component.`
+            //   )
+            // );
+          }
           const result = this.executor ? await this.executor(message) : null;
           this.addInput(message);
           if (result) {
@@ -172,8 +183,10 @@ export default class TerminalController extends EventEmitter {
       return;
     }
     // should not happen but we are permissive
-    if(_.isArray(message)){
-      return (<Array<Message>><any>message).forEach(m => this.raiseEvent(m));
+    if (_.isArray(message)) {
+      return (<Array<Message>>(<any>message)).forEach((m) =>
+        this.raiseEvent(m)
+      );
     }
     switch (message.typeName) {
       case "CommandMessage":
@@ -192,8 +205,6 @@ export default class TerminalController extends EventEmitter {
       this.OutputEvent([ErrorMessage.fromString(error.toString())]);
     }
   }
-
- 
 
   private addInput(input: Message | null) {
     if (_.isNil(input)) {

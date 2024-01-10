@@ -7,7 +7,7 @@ import { ErrorMessage, Message } from "@orbifold/entities";
 describe("TerminalController", () => {
   it("should r", async () => {
     const controller = new TerminalController();
-    controller.executor = (input: string) => {
+    controller.executor = (input: Message) => {
       return Promise.resolve(ErrorMessage.fromString("an error"));
     };
     let received = false;

@@ -7,8 +7,8 @@
       <div class="terminal-content">
         <div v-html="output" class="terminal-output"></div>
         <div class="terminal-input">
-          <div class="my-1 mr-2 text-blue-400">
-            {{ TerminalController.preamble }}
+          <div class="terminal-prefix">
+            {{ prefix }}
           </div>
           <input
             v-model="input"
@@ -40,6 +40,10 @@ import type {
 import "../assets/style.css";
 
 import { Utils } from "@orbifold/utils";
+
+/**
+ * The bindable props of the Terminal component.
+ */
 const props = defineProps<{
   /** The function to be executed when the Terminal gets input. */
   executor?: ExecutionFunction;
@@ -49,6 +53,10 @@ const props = defineProps<{
   commands?: { [key: string]: CommandFunction };
   /** Define aliases. */
   redirect?: { [key: string]: string };
+  /** The prompt. */
+  prefix?: string | ((controller: TerminalController) => string);
+  /** Whether the prefix is kept in the output. */
+  keepPrefix?: boolean;
 }>();
 
 import TerminalController from "./terminalController";
@@ -56,6 +64,7 @@ import { TerminalChannels } from "./terminalController";
 import { CommandMessage, Message, TextMessage } from "@orbifold/entities";
 const showBanner = ref(true);
 const banner = ref("");
+const prefix = ref("");
 let controller: TerminalController | null = null;
 
 /** The HTML Input element. */
@@ -77,6 +86,10 @@ onMounted(async () => {
 
 function createController(): TerminalController {
   const controller = new TerminalController();
+
+  if (props.prefix) {
+    controller.prefix = props.prefix;
+  }
   if (props.commands) {
     controller.commands = props.commands;
   }
@@ -85,12 +98,6 @@ function createController(): TerminalController {
   }
   if (props.executor) {
     controller.executor = props.executor;
-  } else {
-    controller.executor = async (input: TerminalIO) => {
-      return TextMessage.fromString(
-        `You need to provide an executor function to the terminal component.`
-      );
-    };
   }
   controller.on(TerminalChannels.Input, (obj: Message[]) => {
     if (obj.length === 0) {
@@ -110,7 +117,16 @@ function createController(): TerminalController {
     // scrollToBottom();
   });
   controller.on(TerminalChannels.Output, (obj: Message[]) => {
-    output.value += "<br/>" + MessageRendering.renderMessages(obj);
+    // this would keep the prefix in the output:
+    if (props.keepPrefix===true) {
+      output.value += `<br/>${prefix.value} ${MessageRendering.renderMessages(
+        obj
+      )}`;
+    } else {
+      output.value +=
+        "<br/>"  + MessageRendering.renderMessages(obj);
+    }
+
     scrollToBottom();
   });
   controller.on(TerminalChannels.Command, (obj: CommandMessage[]) => {
@@ -118,12 +134,12 @@ function createController(): TerminalController {
       if (cmd.command === "clear") {
         output.value = "";
       }
-      if (cmd.command === "error") {
-        output.value += "<br/>" + formatError(cmd.command);
-      }
     }
   });
   return controller;
+}
+function updatePrefix() {
+  prefix.value = getPrefix();
 }
 /**
  * Scroll to the bottom of the terminal.
@@ -136,20 +152,21 @@ function scrollToBottom(): void {
   });
 }
 
-function formatInput(input: Message[]) {
-  return input
-    .map((u: Message) => {
-      if (u instanceof TextMessage) {
-        return u.text;
-      }
-    })
-    .join("<br/>");
-}
-
 onMounted(() => {
   setFocusOnInput();
   controller = createController();
+  updatePrefix();
 });
+
+function getPrefix(): string {
+  if (!controller) {
+    return "";
+  }
+  if (typeof controller.prefix === "string") {
+    return controller.prefix;
+  }
+  return controller.prefix(controller);
+}
 
 function setFocusOnInput() {
   cmdInput.value?.focus();
@@ -158,22 +175,26 @@ function setFocusOnInput() {
 function historyUp(event: KeyboardEvent) {
   event.preventDefault();
   controller?.historyUp();
+  updatePrefix();
 }
 
 function historyDown(event: KeyboardEvent) {
   event.preventDefault();
   controller?.historyDown();
+  updatePrefix();
 }
 
 function tab(event: KeyboardEvent) {
   event.preventDefault();
   controller?.tab();
+  updatePrefix();
 }
 
 function execute(event: KeyboardEvent) {
   event.preventDefault();
   controller?.execute(input.value);
   input.value = "";
+  updatePrefix();
 }
 </script>
 <style></style>

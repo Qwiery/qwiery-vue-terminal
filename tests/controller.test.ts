@@ -7,7 +7,7 @@ import { ErrorMessage, Message } from "@orbifold/entities";
 describe("TerminalController", () => {
   it("should return the Message as-is", async () => {
     const controller = new TerminalController();
-    controller.executor = (input: string) => {
+    controller.executor = (input: Message) => {
       return Promise.resolve(ErrorMessage.fromString("an error"));
     };
     let received = false;
@@ -22,7 +22,7 @@ describe("TerminalController", () => {
   });
   it("should convert a strong to a TextMessage", async () => {
     const controller = new TerminalController();
-    controller.executor = async (input: string) => {
+    controller.executor = async (input: Message) => {
       return "abc";
     };
     let received = false;

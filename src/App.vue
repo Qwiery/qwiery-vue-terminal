@@ -2,10 +2,9 @@
   <div style="position: absolute; top: 200px; left: 200px; width: 900px">
     <h2>Vue3 Terminal</h2>
     <Terminal
-      :executor="executor"
-      :banner="banner"
-      :commands="commands"
-      :redirect="redirect"
+     :commands="commands"
+     :prefix="prefix"
+     :keepPrefix="true"
     />
   </div>
 </template>
@@ -23,12 +22,13 @@ function executor(input: Message) {
   }
 }
 const commands = {
-  a: () => {
-    return TextMessage.fromString("you said sadfa");
+  ls: () => {
+    return TextMessage.fromString("Lists the files in the current directory.");
   },
 };
 const banner = `Terminal Vue 3 Component`;
 const redirect = {
   ls: "show files",
 };
+const prefix = ()=> new Date().toLocaleTimeString() + " > ";
 </script>

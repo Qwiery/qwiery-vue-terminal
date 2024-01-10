@@ -40,3 +40,7 @@
 .terminal-render-command{
     color: #22ffd6;
 }
+.terminal-prefix{
+    color: #ff68de;
+    text-wrap: nowrap;
+}

@@ -24,6 +24,10 @@ The component tries hard to makes sense of input and output, to render things ap
 
 ## Messages
 
+The messages convey different types of information (code, image, text...) and they can carry additional information (a payload). All the predefined message types sit in the `@orbifold/entities` package, but you can easily create your own.
+There is also a `MessageFactory` acting as a gateway to diverse
+
+
 ## How to handle input?
 
 Hook up the `executor` property
