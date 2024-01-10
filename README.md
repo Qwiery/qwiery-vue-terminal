@@ -78,9 +78,49 @@ function executor(input:string){
 
 ## How handle commands?
 
+A command starts with an exclamation mark, for example `!clear`. You can, however, use an alias (redirect or shortcut) to bypass this. See the explanation below.
+
+Commands can be defined via the `commands` prop:
+
+```html
+<template> 
+    <Terminal :commands="commands"/> 
+</template>
+<script setup lang="ts">
+const commands = {
+  ls: () => {
+    return TextMessage.fromString("Lists the files in the current directory.");
+  },
+};
+</script>
+```
+## Prefix
+
+The prompt or prefix can be set with the `prefix` prop. It's a string or a function, so it can be dynamic. The function receives the controller as a paramter, so you can access pretty much anything (the input history, the commands...) you need to provide a dynamic prefix.
+
+By default the prefix is not kept in the output. If you wish to do so, set the `keepPrefix` prop to `true`.
+
+To have the time as prefix:
+```html
+<template>
+  <Terminal     
+     :prefix="prefix"     
+    />
+</Terminal>    
+<script setup land="ts">
+const prefix = ()=> new Date().toLocaleTimeString() + " > ";
+</script>
+```
+
+
+
 ## How to define an alias?
 
 An alias or redirect will convert some string input to something else. For instance, the command `clear` will clear the terminal but this is an alias for `!clear` since commands should normally be prefixed with `!`.
+
+## Style
+
+The various style classes can be seen in `assets\style.css` file and you simply need to redefine them in your application.
 
 ## Feedback
 
